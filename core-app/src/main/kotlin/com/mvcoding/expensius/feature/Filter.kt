@@ -38,6 +38,7 @@ class Filter(appUserService: AppUserService, timestampProvider: TimestampProvide
     }
 
     fun filterData(): Observable<FilterData> = filterDataSubject
+    fun getCurrentFilterData(): FilterData = filterDataSubject.value
 
     fun setInterval(interval: Interval): Filter {
         filterData = filterData.withInterval(interval)

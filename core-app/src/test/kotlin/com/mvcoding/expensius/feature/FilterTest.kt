@@ -20,6 +20,8 @@ import com.mvcoding.expensius.model.TransactionType.EXPENSE
 import com.mvcoding.expensius.model.aFixedTimestampProvider
 import com.mvcoding.expensius.model.anAppUser
 import com.mvcoding.expensius.service.AppUserService
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import org.joda.time.Interval
@@ -36,29 +38,35 @@ class FilterTest {
     val filter = Filter(appUserService, timestampProvider)
 
     @Test
-    fun initiallyGivesEmptyFilterData() {
+    fun `initially gives empty filter data`() {
         filter.filterData().subscribe(subscriber)
 
+        val filterData = filter.getCurrentFilterData()
+
         subscriber.assertValue(defaultFilterData)
+        assertThat(filterData, equalTo(defaultFilterData))
     }
 
     @Test
-    fun changingFilterValuesEmitsUpdatedFilter() {
+    fun `changing filter values emits updated filter`() {
         filter.filterData().subscribe(subscriber)
 
         filter.setTransactionType(EXPENSE)
         filter.setTransactionState(PENDING)
         filter.setInterval(Interval(0, 1))
 
+        val filterData = filter.getCurrentFilterData()
+
         subscriber.assertValues(
                 defaultFilterData,
                 defaultFilterData.copy(transactionType = EXPENSE),
                 defaultFilterData.copy(transactionType = EXPENSE, transactionState = PENDING),
                 defaultFilterData.copy(Interval(0, 1), EXPENSE, PENDING))
+        assertThat(filterData, equalTo(FilterData(Interval(0, 1), EXPENSE, PENDING)))
     }
 
     @Test
-    fun clearingFilterValuesEmitsUpdatedFilter() {
+    fun `clearing filter values emits updated filter`() {
         filter.setInterval(Interval(0, 1))
         filter.setTransactionType(EXPENSE)
         filter.setTransactionState(PENDING)
@@ -67,9 +75,12 @@ class FilterTest {
         filter.clearTransactionType()
         filter.clearTransactionState()
 
+        val filterData = filter.getCurrentFilterData()
+
         subscriber.assertValues(
                 FilterData(Interval(0, 1), EXPENSE, PENDING),
                 FilterData(Interval(0, 1), transactionState = PENDING),
                 FilterData(Interval(0, 1)))
+        assertThat(filterData, equalTo(FilterData(Interval(0, 1))))
     }
 }
